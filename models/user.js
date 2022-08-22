@@ -6,12 +6,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 2,
     maxlength: 30,
-    // validate: {
-    //   validator(v) {
-    //       return v >= 18;
-    //   },
-    //   message: 'Вам должно быть больше 18 лет!',
-    // }
   },
   about: {
     type: String,
