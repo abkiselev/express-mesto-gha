@@ -1,76 +1,81 @@
 const Card = require('../models/card');
-const { OK_CODE, BAD_REQUEST_CODE, NOT_FOUND_CODE, DEFAULT_CODE } = require('../constants/errors');
+const {
+  OK_CODE, CREATED_CODE, BAD_REQUEST_CODE, NOT_FOUND_CODE, DEFAULT_CODE,
+} = require('../constants/errors');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .then(cards => res.status(OK_CODE).send({ data: cards }))
+    .then((cards) => res.status(OK_CODE).send({ data: cards }))
     .catch(() => res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' }));
-}
+};
 
 module.exports.createCard = async (req, res) => {
   const owner = req.user._id;
   const { name, link } = req.body;
-  const createdAt = Date.now();
 
   try {
-    const card = await Card.create({ name, link, owner, createdAt });
-    res.status(OK_CODE).send({ data: card });
-
+    const card = await Card.create({ name, link, owner });
+    return res.status(CREATED_CODE).send({ data: card });
   } catch (error) {
-    if(error.name === "ValidationError"){
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания карточки' })
+    if (error.name === 'ValidationError') {
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания карточки' });
     }
-    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
   }
-}
+};
 
 module.exports.deleteCard = async (req, res) => {
   try {
     const card = await Card.findByIdAndRemove(req.params.cardId);
 
-    if(!card){
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    if (!card) {
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
     }
-    res.status(OK_CODE).send({ data: card });
-
+    return res.status(OK_CODE).send({ data: card });
   } catch (error) {
-    if(error.kind === "ObjectId"){
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    if (error.kind === 'ObjectId') {
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
     }
-    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
   }
-}
+};
 
 module.exports.likeCard = async (req, res) => {
   try {
-    const card = await Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true });
+    const card = await Card.findByIdAndUpdate(
+      req.params.cardId,
+      { $addToSet: { likes: req.user._id } },
+      { new: true },
+    );
 
-    if(!card){
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    if (!card) {
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
     }
-    res.status(OK_CODE).send({ data: card });
-
+    return res.status(OK_CODE).send({ data: card });
   } catch (error) {
-    if(error.kind === "ObjectId"){
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    if (error.kind === 'ObjectId') {
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
     }
-    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
   }
-}
+};
 
 module.exports.dislikeCard = async (req, res) => {
   try {
-    const card = await Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true });
+    const card = await Card.findByIdAndUpdate(
+      req.params.cardId,
+      { $pull: { likes: req.user._id } },
+      { new: true },
+    );
 
-    if(!card){
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    if (!card) {
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
     }
-    res.status(OK_CODE).send({ data: card });
-
+    return res.status(OK_CODE).send({ data: card });
   } catch (error) {
-    if(error.kind === "ObjectId"){
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    if (error.kind === 'ObjectId') {
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
     }
-    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
   }
-}
+};
