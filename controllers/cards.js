@@ -1,41 +1,76 @@
 const Card = require('../models/card');
+const { OK_CODE, BAD_REQUEST_CODE, NOT_FOUND_CODE, DEFAULT_CODE } = require('../constants/errors');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .then(cards => res.status(200).send({ data: cards }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .then(cards => res.status(OK_CODE).send({ data: cards }))
+    .catch(() => res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' }));
 }
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = async (req, res) => {
   const owner = req.user._id;
   const { name, link } = req.body;
-  const createdAt = Date.now()
+  const createdAt = Date.now();
 
-  Card.create({ name, link, owner, createdAt })
-    .then(card => res.status(200).send({ data: card }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+  try {
+    const card = await Card.create({ name, link, owner, createdAt });
+    res.status(OK_CODE).send({ data: card });
+
+  } catch (error) {
+    if(error.errors.name.name === "ValidatorError"){
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания карточки' })
+    }
+    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+  }
 }
 
-module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .then(card => res.status(200).send({ data: card }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+module.exports.deleteCard = async (req, res) => {
+  try {
+    const card = await Card.findByIdAndRemove(req.params.cardId);
+
+    if(!card){
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    }
+    res.status(OK_CODE).send({ data: card });
+
+  } catch (error) {
+    if(error.kind === "ObjectId"){
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    }
+    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+  }
 }
 
-module.exports.likeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },)
-      .then(card => res.status(200).send({ data: card }))
-      .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+module.exports.likeCard = async (req, res) => {
+  try {
+    const card = await Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true });
+
+    if(!card){
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    }
+    res.status(OK_CODE).send({ data: card });
+
+  } catch (error) {
+    if(error.kind === "ObjectId"){
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    }
+    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+  }
 }
 
-module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },)
-      .then(card => res.status(200).send({ data: card }))
-      .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+module.exports.dislikeCard = async (req, res) => {
+  try {
+    const card = await Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true });
+
+    if(!card){
+      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' })
+    }
+    res.status(OK_CODE).send({ data: card });
+
+  } catch (error) {
+    if(error.kind === "ObjectId"){
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' })
+    }
+    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+  }
 }
