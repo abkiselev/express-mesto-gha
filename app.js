@@ -23,7 +23,13 @@ app.use((req, res, next) => {
 
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
+app.use('*', (req, res) => {
+  res.send({ message: 'Недопустимый URL' });
+});
 
-app.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`)
+app.listen(PORT, (err) => {
+  if(err){
+    console.log('Ошибка при запуске', ...err);
+  }
+  console.log(`Сервер запущен на порту ${PORT}`)
 })
