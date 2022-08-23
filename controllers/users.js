@@ -31,10 +31,11 @@ module.exports.createUser = async (req, res) => {
     const user = await User.create({ name, about, avatar });
     res.status(OK_CODE).send({ data: user });
   } catch (error) {
-    if(error.errors.name.name === "ValidatorError"){
+    console.log(error.name);
+    if(error.name === "ValidationError"){
       return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания пользователя' })
     }
-    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
+    res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка', error })
   }
 }
 
@@ -50,7 +51,7 @@ module.exports.updateUserInfo = async (req, res) => {
     res.status(OK_CODE).send({ data: user });
 
   } catch (error) {
-    if(error.errors.name.name === "ValidatorError"){
+    if(error.name === "ValidationError"){
       return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для обновления пользователя' })
     }
     res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
@@ -66,11 +67,11 @@ module.exports.updateUserAvatar = async (req, res) => {
     if(!user){
       return res.status(NOT_FOUND_CODE).send({ message: 'Пользователь по указанному _id не найден' })
     }
-    
+
     res.status(OK_CODE).send({ avatar: user.avatar });
 
   } catch (error) {
-    if(error.errors.name.name === "ValidatorError"){
+    if(error.name === "ValidationError"){
       return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для обновления пользователя' })
     }
     res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })

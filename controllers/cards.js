@@ -17,7 +17,7 @@ module.exports.createCard = async (req, res) => {
     res.status(OK_CODE).send({ data: card });
 
   } catch (error) {
-    if(error.errors.name.name === "ValidatorError"){
+    if(error.name === "ValidationError"){
       return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания карточки' })
     }
     res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' })
