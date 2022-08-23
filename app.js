@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
+const { NOT_FOUND_CODE } = require('./constants/errors');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -24,7 +25,7 @@ app.use((req, res, next) => {
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
 app.use('*', (req, res) => {
-  res.send({ message: 'Недопустимый URL' });
+  res.status(NOT_FOUND_CODE).send({ message: 'Недопустимый URL' });
 });
 
 app.listen(PORT, (err) => {
