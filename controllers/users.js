@@ -80,6 +80,9 @@ module.exports.updateUserAvatar = async (req, res) => {
 
     return res.status(OK_CODE).send({ avatar: user.avatar });
   } catch (error) {
+    if (error.kind === 'ObjectId') {
+      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID пользователя' });
+    }
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для обновления пользователя' });
     }
