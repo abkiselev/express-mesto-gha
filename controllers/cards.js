@@ -41,7 +41,7 @@ module.exports.deleteCard = async (req, res, next) => {
       throw new NotFoundError('Карточка с указанным _id не найдена');
     }
 
-    if (req.user._id !== owner) {
+    if (req.params.cardId !== owner) {
       throw new ForbiddenError('Не достаточно прав для удаления');
     }
 
