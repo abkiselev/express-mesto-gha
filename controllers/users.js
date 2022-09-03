@@ -1,15 +1,14 @@
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 const {
   OK_CODE,
   CREATED_CODE,
   BadRequestError,
   UnautorizedError,
-  ForbiddenError,
   NotFoundError,
   ConflictError,
-} = require('../constants/errors');
+} = require('../constants/codes');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -24,16 +23,15 @@ module.exports.getMe = async (req, res, next) => {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
     return res.status(OK_CODE).send({ data: user });
-
   } catch (error) {
     try {
       if (error.kind === 'ObjectId') {
         throw new BadRequestError('Неверный формат ID пользователя');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
 
@@ -50,32 +48,35 @@ module.exports.getUser = async (req, res, next) => {
       if (error.kind === 'ObjectId') {
         throw new BadRequestError('Неверный формат ID пользователя');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
 
 module.exports.createUser = async (req, res, next) => {
   try {
-    const { name, about, avatar, email, password } = req.body;  
+    const {
+      name, about, avatar, email, password,
+    } = req.body;
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, about, avatar, email, password: hash });
+    const user = await User.create({
+      name, about, avatar, email, password: hash,
+    });
     return res.status(CREATED_CODE).send({ data: user });
-
   } catch (error) {
     try {
       if (error.name === 'ValidationError') {
         throw new BadRequestError('Некорректные данные для создания пользователя');
-      } 
+      }
       if (error.code === 11000) {
         throw new ConflictError('Такой пользователь уже существует');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
 
@@ -93,7 +94,6 @@ module.exports.updateUserInfo = async (req, res, next) => {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
     return res.status(OK_CODE).send({ data: user });
-
   } catch (error) {
     try {
       if (error.kind === 'ObjectId') {
@@ -102,10 +102,10 @@ module.exports.updateUserInfo = async (req, res, next) => {
       if (error.name === 'ValidationError') {
         throw new BadRequestError('Некорректные данные для обновления пользователя');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
 
@@ -124,7 +124,6 @@ module.exports.updateUserAvatar = async (req, res, next) => {
     }
 
     return res.status(OK_CODE).send({ avatar: user.avatar });
-
   } catch (error) {
     try {
       if (error.kind === 'ObjectId') {
@@ -133,10 +132,10 @@ module.exports.updateUserAvatar = async (req, res, next) => {
       if (error.name === 'ValidationError') {
         throw new BadRequestError('Некорректные данные для обновления пользователя');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
 
@@ -148,7 +147,7 @@ module.exports.login = async (req, res, next) => {
     if (!user) {
       throw new UnautorizedError('Неправильные почта или пароль');
     }
-    
+
     const matched = await bcrypt.compare(password, user.password);
     if (!matched) {
       throw new UnautorizedError('Неправильные почта или пароль');
@@ -157,7 +156,6 @@ module.exports.login = async (req, res, next) => {
     const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
     res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
     return res.status(OK_CODE).send({ token });
-
   } catch (error) {
     try {
       if (error.kind === 'ObjectId') {
@@ -166,9 +164,9 @@ module.exports.login = async (req, res, next) => {
       if (error.name === 'ValidationError') {
         throw new BadRequestError('Некорректные данные');
       }
-    } catch (error) {
-      next(error)
+    } catch (err) {
+      next(err);
     }
-    next(error)
+    return next(error);
   }
 };
