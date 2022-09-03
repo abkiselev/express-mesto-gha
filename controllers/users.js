@@ -1,13 +1,13 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { BadRequestError } = require('../constants/BadRequestError');
+const { UnautorizedError } = require('../constants/UnautorizedError');
+const { NotFoundError } = require('../constants/NotFoundError');
+const { ConflictError } = require('../constants/ConflictError');
 const {
   OK_CODE,
   CREATED_CODE,
-  BadRequestError,
-  UnautorizedError,
-  NotFoundError,
-  ConflictError,
 } = require('../constants/codes');
 
 module.exports.getUsers = (req, res, next) => {
@@ -93,6 +93,11 @@ module.exports.updateUserInfo = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
+
+    if (req.user._id !== user._id) {
+      throw new ConflictError('Не достаточно прав для удаления');
+    }
+
     return res.status(OK_CODE).send({ data: user });
   } catch (error) {
     try {
@@ -121,6 +126,10 @@ module.exports.updateUserAvatar = async (req, res, next) => {
 
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
+    }
+
+    if (req.user._id !== user._id) {
+      throw new ConflictError('Не достаточно прав для удаления');
     }
 
     return res.status(OK_CODE).send({ avatar: user.avatar });

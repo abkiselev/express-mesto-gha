@@ -1,10 +1,10 @@
 const Card = require('../models/card');
+const { BadRequestError } = require('../constants/BadRequestError');
+const { NotFoundError } = require('../constants/NotFoundError');
+const { ConflictError } = require('../constants/ConflictError');
 const {
   OK_CODE,
   CREATED_CODE,
-  BadRequestError,
-  NotFoundError,
-  ConflictError,
 } = require('../constants/codes');
 
 module.exports.getCards = (req, res, next) => {
