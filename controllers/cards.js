@@ -1,6 +1,6 @@
 const Card = require('../models/card');
 const {
-  OK_CODE, CREATED_CODE, BAD_REQUEST_CODE, NOT_FOUND_CODE, DEFAULT_CODE,
+  OK_CODE, CREATED_CODE, BAD_REQUEST_CODE, FORBIDDEN_CODE, NOT_FOUND_CODE, DEFAULT_CODE,
 } = require('../constants/errors');
 
 module.exports.getCards = (req, res) => {
@@ -25,12 +25,19 @@ module.exports.createCard = async (req, res) => {
 };
 
 module.exports.deleteCard = async (req, res) => {
+
   try {
     const card = await Card.findByIdAndRemove(req.params.cardId);
-
+    const owner = card.owner._id;
+    
     if (!card) {
       return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
     }
+
+    if(req.user._id !== owner){
+      return res.status(FORBIDDEN_CODE).send({ message: 'Не достаточно прав для удаления' });
+    }
+    
     return res.status(OK_CODE).send({ data: card });
   } catch (error) {
     if (error.kind === 'ObjectId') {
