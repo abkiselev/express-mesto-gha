@@ -56,16 +56,20 @@ module.exports.getUser = async (req, res, next) => {
 };
 
 module.exports.createUser = async (req, res, next) => {
-  console.log('createuser', req.body);
   try {
     const {
-      name, about, avatar, email, password,
+      name, about, avatar, email,
     } = req.body;
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(req.body.password, 10);
     const user = await User.create({
       name, about, avatar, email, password: hash,
     });
-    return res.status(CREATED_CODE).send({ data: user });
+    // const { password, ...userData } = user;
+    return res.status(CREATED_CODE).send({
+      data: {
+        _id: user._id, name: user.name, about: user.about, avatar: user.avatar, email: user.email,
+      },
+    });
   } catch (error) {
     try {
       if (error.name === 'ValidationError') {
@@ -94,9 +98,8 @@ module.exports.updateUserInfo = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
-
-    if (req.user._id !== user._id) {
-      throw new ConflictError('Не достаточно прав для удаления');
+    if (req.user._id !== user._id.toString()) {
+      throw new ConflictError('Не достаточно прав для обновления');
     }
 
     return res.status(OK_CODE).send({ data: user });
@@ -129,8 +132,8 @@ module.exports.updateUserAvatar = async (req, res, next) => {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
 
-    if (req.user._id !== user._id) {
-      throw new ConflictError('Не достаточно прав для удаления');
+    if (req.user._id !== user._id.toString()) {
+      throw new ConflictError('Не достаточно прав для обновления');
     }
 
     return res.status(OK_CODE).send({ avatar: user.avatar });

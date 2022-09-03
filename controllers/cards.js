@@ -1,7 +1,7 @@
 const Card = require('../models/card');
 const { BadRequestError } = require('../constants/BadRequestError');
 const { NotFoundError } = require('../constants/NotFoundError');
-const { ConflictError } = require('../constants/ConflictError');
+const { ForbiddenError } = require('../constants/ForbiddenError');
 const {
   OK_CODE,
   CREATED_CODE,
@@ -42,7 +42,7 @@ module.exports.deleteCard = async (req, res, next) => {
     }
 
     if (req.user._id !== owner) {
-      throw new ConflictError('Не достаточно прав для удаления');
+      throw new ForbiddenError('Не достаточно прав для удаления');
     }
 
     return res.status(OK_CODE).send({ data: card });

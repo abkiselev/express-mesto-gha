@@ -23,18 +23,18 @@ app.use('/users', auth, usersRoutes);
 app.use('/cards', auth, cardsRoutes);
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2),
+    email: Joi.string().required().min(2).email(),
     password: Joi.string().required().min(2),
   }),
 }), login);
 
 app.post('/signup', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2),
+    email: Joi.string().required().min(2).email(),
     password: Joi.string().required().min(2),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().min(2),
+    avatar: Joi.string().min(2).pattern(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/),
   }),
 }), createUser);
 
@@ -44,8 +44,8 @@ app.use('*', (req, res) => {
 
 app.use(errors());
 
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.log('обработчик обшибок');
   const { statusCode = 500, message } = err;
 
   res.status(statusCode).send({
