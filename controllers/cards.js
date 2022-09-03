@@ -1,53 +1,67 @@
 const Card = require('../models/card');
 const {
-  OK_CODE, CREATED_CODE, BAD_REQUEST_CODE, FORBIDDEN_CODE, NOT_FOUND_CODE, DEFAULT_CODE,
+  OK_CODE,
+  CREATED_CODE,
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
 } = require('../constants/errors');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.status(OK_CODE).send({ data: cards }))
-    .catch(() => res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.createCard = async (req, res) => {
+module.exports.createCard = async (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
 
   try {
     const card = await Card.create({ name, link, owner });
     return res.status(CREATED_CODE).send({ data: card });
+
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Некорректные данные для создания карточки' });
+    try {
+      if (error.name === 'ValidationError') {
+        throw new BadRequestError('Некорректные данные для создания карточки');
+      }
+    } catch (error) {
+      next(error)
     }
-    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
+    next(error)
   }
 };
 
-module.exports.deleteCard = async (req, res) => {
-
+module.exports.deleteCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndRemove(req.params.cardId);
-    const owner = card.owner._id;
+    const owner = req.user._id;
     
     if (!card) {
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
+      throw new NotFoundError('Карточка с указанным _id не найдена');
     }
 
     if(req.user._id !== owner){
-      return res.status(FORBIDDEN_CODE).send({ message: 'Не достаточно прав для удаления' });
+      throw new ConflictError('Не достаточно прав для удаления');
     }
-    
+
     return res.status(OK_CODE).send({ data: card });
+
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
+    try {
+      if (error.kind === 'ObjectId') {
+        throw new BadRequestError('Неверный формат ID');
+      }
+    } catch (error) {
+      next(error)
     }
-    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
+    next(error)
   }
 };
 
-module.exports.likeCard = async (req, res) => {
+module.exports.likeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -56,18 +70,23 @@ module.exports.likeCard = async (req, res) => {
     );
 
     if (!card) {
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
+      throw new NotFoundError('Карточка с указанным _id не найдена');
     }
     return res.status(OK_CODE).send({ data: card });
+
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
+    try {
+      if (error.kind === 'ObjectId') {
+        throw new BadRequestError('Неверный формат ID');
+      }
+    } catch (error) {
+      next(error)
     }
-    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
+    next(error)
   }
 };
 
-module.exports.dislikeCard = async (req, res) => {
+module.exports.dislikeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -76,13 +95,18 @@ module.exports.dislikeCard = async (req, res) => {
     );
 
     if (!card) {
-      return res.status(NOT_FOUND_CODE).send({ message: 'Карточка с указанным _id не найдена' });
+      throw new NotFoundError('Карточка с указанным _id не найдена');
     }
     return res.status(OK_CODE).send({ data: card });
+
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(BAD_REQUEST_CODE).send({ message: 'Неверный формат ID карточки' });
+    try {
+      if (error.kind === 'ObjectId') {
+        throw new BadRequestError('Неверный формат ID');
+      }
+    } catch (error) {
+      next(error)
     }
-    return res.status(DEFAULT_CODE).send({ message: 'На сервере произошла ошибка' });
+    next(error)
   }
 };

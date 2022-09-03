@@ -1,11 +1,5 @@
 const OK_CODE = 200;
 const CREATED_CODE = 201;
-// module.exports.BAD_REQUEST_CODE = 400;
-// module.exports.UNAUTORIZED_CODE = 401;
-// module.exports.FORBIDDEN_CODE = 403;
-// module.exports.NOT_FOUND_CODE = 404;
-const DEFAULT_CODE = 404;
-
 
 class BadRequestError extends Error {
     constructor(message) {
@@ -24,7 +18,7 @@ class UnautorizedError extends Error {
 class ForbiddenError extends Error {
     constructor(message) {
       super(message);
-      this.statusCode = 404;
+      this.statusCode = 403;
     }
 }
 
@@ -45,7 +39,6 @@ class ConflictError extends Error {
 module.exports = {
     OK_CODE,
     CREATED_CODE,
-    DEFAULT_CODE,
     BadRequestError,
     UnautorizedError,
     ForbiddenError,

@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const {
   OK_CODE,
   CREATED_CODE,
-  DEFAULT_CODE,
   BadRequestError,
   UnautorizedError,
   ForbiddenError,
@@ -125,7 +124,7 @@ module.exports.updateUserAvatar = async (req, res, next) => {
     }
 
     return res.status(OK_CODE).send({ avatar: user.avatar });
-    
+
   } catch (error) {
     try {
       if (error.kind === 'ObjectId') {
