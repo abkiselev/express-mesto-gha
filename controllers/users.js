@@ -56,6 +56,7 @@ module.exports.getUser = async (req, res, next) => {
 };
 
 module.exports.createUser = async (req, res, next) => {
+  console.log('createuser', req.body);
   try {
     const {
       name, about, avatar, email, password,

@@ -7,7 +7,6 @@ const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
-const { NotFoundError } = require('./constants/codes');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -33,11 +32,14 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().min(2),
     password: Joi.string().required().min(2),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2),
   }),
 }), createUser);
 
-app.use('*', () => {
-  throw new NotFoundError('Недопустимый URL');
+app.use('*', (req, res) => {
+  res.status(404).send({ message: 'Недопустимый URL' });
 });
 
 app.use(errors());
