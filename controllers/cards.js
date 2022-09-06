@@ -3,13 +3,12 @@ const { BadRequestError } = require('../constants/BadRequestError');
 const { NotFoundError } = require('../constants/NotFoundError');
 const { ForbiddenError } = require('../constants/ForbiddenError');
 const {
-  OK_CODE,
   CREATED_CODE,
 } = require('../constants/codes');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.status(OK_CODE).send({ data: cards }))
+    .then((cards) => res.send({ data: cards }))
     .catch(next);
 };
 
@@ -21,12 +20,8 @@ module.exports.createCard = async (req, res, next) => {
     const card = await Card.create({ name, link, owner });
     return res.status(CREATED_CODE).send({ data: card });
   } catch (error) {
-    try {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestError('Некорректные данные для создания карточки');
-      }
-    } catch (err) {
-      next(err);
+    if (error.name === 'ValidationError') {
+      return next(new BadRequestError('Некорректные данные для создания карточки'));
     }
     return next(error);
   }
@@ -34,7 +29,7 @@ module.exports.createCard = async (req, res, next) => {
 
 module.exports.deleteCard = async (req, res, next) => {
   try {
-    const card = await Card.findByIdAndRemove(req.params.cardId);
+    const card = await Card.findById(req.params.cardId);
     const owner = req.user._id;
 
     if (!card) {
@@ -45,14 +40,12 @@ module.exports.deleteCard = async (req, res, next) => {
       throw new ForbiddenError('Не достаточно прав для удаления');
     }
 
-    return res.status(OK_CODE).send({ data: card });
+    await card.remove();
+
+    return res.send({ message: 'Карточка удалена успешно' });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID'));
     }
     return next(error);
   }
@@ -69,14 +62,10 @@ module.exports.likeCard = async (req, res, next) => {
     if (!card) {
       throw new NotFoundError('Карточка с указанным _id не найдена');
     }
-    return res.status(OK_CODE).send({ data: card });
+    return res.send({ data: card });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID'));
     }
     return next(error);
   }
@@ -93,14 +82,10 @@ module.exports.dislikeCard = async (req, res, next) => {
     if (!card) {
       throw new NotFoundError('Карточка с указанным _id не найдена');
     }
-    return res.status(OK_CODE).send({ data: card });
+    return res.send({ data: card });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID'));
     }
     return next(error);
   }

@@ -6,13 +6,12 @@ const { UnautorizedError } = require('../constants/UnautorizedError');
 const { NotFoundError } = require('../constants/NotFoundError');
 const { ConflictError } = require('../constants/ConflictError');
 const {
-  OK_CODE,
   CREATED_CODE,
 } = require('../constants/codes');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.status(OK_CODE).send({ data: users }))
+    .then((users) => res.send({ data: users }))
     .catch(next);
 };
 
@@ -22,15 +21,8 @@ module.exports.getMe = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
-    return res.status(OK_CODE).send({ data: user });
+    return res.send({ data: user });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID пользователя');
-      }
-    } catch (err) {
-      next(err);
-    }
     return next(error);
   }
 };
@@ -42,14 +34,10 @@ module.exports.getUser = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
-    return res.status(OK_CODE).send({ data: user });
+    return res.send({ data: user });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID пользователя');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID'));
     }
     return next(error);
   }
@@ -64,22 +52,17 @@ module.exports.createUser = async (req, res, next) => {
     const user = await User.create({
       name, about, avatar, email, password: hash,
     });
-    // const { password, ...userData } = user;
     return res.status(CREATED_CODE).send({
       data: {
         _id: user._id, name: user.name, about: user.about, avatar: user.avatar, email: user.email,
       },
     });
   } catch (error) {
-    try {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestError('Некорректные данные для создания пользователя');
-      }
-      if (error.code === 11000) {
-        throw new ConflictError('Такой пользователь уже существует');
-      }
-    } catch (err) {
-      next(err);
+    if (error.name === 'ValidationError') {
+      return next(new BadRequestError('Некорректные данные для создания пользователя'));
+    }
+    if (error.code === 11000) {
+      return next(new ConflictError('Такой пользователь уже существует'));
     }
     return next(error);
   }
@@ -98,21 +81,14 @@ module.exports.updateUserInfo = async (req, res, next) => {
     if (!user) {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
-    if (req.user._id !== user._id.toString()) {
-      throw new ConflictError('Не достаточно прав для обновления');
-    }
 
-    return res.status(OK_CODE).send({ data: user });
+    return res.send({ data: user });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID пользователя');
-      }
-      if (error.name === 'ValidationError') {
-        throw new BadRequestError('Некорректные данные для обновления пользователя');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID пользователя'));
+    }
+    if (error.name === 'ValidationError') {
+      return next(new BadRequestError('Некорректные данные для обновления пользователя'));
     }
     return next(error);
   }
@@ -132,21 +108,13 @@ module.exports.updateUserAvatar = async (req, res, next) => {
       throw new NotFoundError('Пользователь по указанному _id не найден');
     }
 
-    if (req.user._id !== user._id.toString()) {
-      throw new ConflictError('Не достаточно прав для обновления');
-    }
-
-    return res.status(OK_CODE).send({ avatar: user.avatar });
+    return res.send({ avatar: user.avatar });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID пользователя');
-      }
-      if (error.name === 'ValidationError') {
-        throw new BadRequestError('Некорректные данные для обновления пользователя');
-      }
-    } catch (err) {
-      next(err);
+    if (error.kind === 'ObjectId') {
+      return next(new BadRequestError('Неверный формат ID пользователя'));
+    }
+    if (error.name === 'ValidationError') {
+      return next(new BadRequestError('Некорректные данные для обновления пользователя'));
     }
     return next(error);
   }
@@ -168,18 +136,8 @@ module.exports.login = async (req, res, next) => {
 
     const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
     res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
-    return res.status(OK_CODE).send({ token });
+    return res.send({ token });
   } catch (error) {
-    try {
-      if (error.kind === 'ObjectId') {
-        throw new BadRequestError('Неверный формат ID пользователя');
-      }
-      if (error.name === 'ValidationError') {
-        throw new BadRequestError('Некорректные данные');
-      }
-    } catch (err) {
-      next(err);
-    }
     return next(error);
   }
 };
